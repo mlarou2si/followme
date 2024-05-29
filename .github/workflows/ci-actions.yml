@@ -1,0 +1,57 @@
+
+name: Python application
+  
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches: [ "develop", "staging", "prod" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      APP_SOURCE: app
+      TEST_SOURCE: tests
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+
+    - name: Install and configure Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.8.2
+        virtualenvs-create: true
+        virtualenvs-in-project: false
+        installer-parallel: true
+      
+    - name: PoetryCheck
+      run: poetry install --sync
+
+      
+    - name: Format sources using 'ruff'
+      run: poetry run ruff format $APP_SOURCE $TEST_SOURCE
+      
+    - name: Check Typing
+      run: poetry run mypy $APP_SOURCE
+
+    - name: Check linters using 'ruff'
+      run: poetry run ruff check --force-exclude $APP_SOURCE $TEST_SOURCE
+
+    - name: Run tests
+      run: poetry run coverage run -m pytest
+
+    - name: Coverage results
+      run: poetry run coverage report -m && poetry run coverage xml
+
+    - name: Packaging and publish of the project
+      run: poetry build -f wheel
+
+    - name: Check Sonarqube
+      run: echo "Check Sonarqube if we have access"
+
+    - name: Build Image
+      run: echo "build and publish the docker image if we have access"
