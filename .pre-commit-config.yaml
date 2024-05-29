@@ -1,0 +1,55 @@
+repos:
+  - repo: local
+    hooks:
+      - id: poetry_check
+        name: PoetryCheck
+        entry: poetry check --lock
+        pass_filenames: false
+        language: system
+        require_serial: true
+
+      - id: Format-sources
+        name: Format sources using 'ruff'
+        entry: poetry run ruff format app tests
+        language: system
+        require_serial: true
+        types_or: [python, pyi]
+
+      - id: Check-mypy
+        name: Check Typing
+        entry: poetry run mypy app
+        pass_filenames: false
+        language: system
+        require_serial: true
+        types_or: [python]
+
+      - id: RUFF-Check-linters
+        name: Check linters using 'ruff'
+        entry: poetry run ruff check --force-exclude app tests
+        language: system
+        types_or: [python, pyi]
+        args: [--fix, --exit-non-zero-on-fix]
+        verbose: true
+
+      - id: Run-Tests
+        name: Running the tests
+        entry: poetry run coverage run -m pytest
+        pass_filenames: false
+        language: system
+        types_or: [python]
+        verbose: true
+      
+      - id: Coverage
+        name: Coverage
+        entry: bash -c "poetry run coverage report -m && poetry run coverage xml"
+        pass_filenames: false
+        language: system
+        types_or: [python]
+        verbose: true
+  
+      - id: package
+        name: Packaging the project
+        entry: poetry build -f wheel
+        pass_filenames: false
+        language: system
+        types_or: [python]
